@@ -2,7 +2,8 @@ package main
 
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
-	// "github.com/aws/aws-cdk-go/awscdk/v2/awssqs"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsapigateway"
+	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 	"github.com/aws/constructs-go/constructs/v10"
 	"github.com/aws/jsii-runtime-go"
 )
@@ -19,11 +20,17 @@ func NewCdkLambdaGo2Stack(scope constructs.Construct, id string, props *CdkLambd
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
 	// The code that defines your stack goes here
+	api := awsapigateway.NewRestApi(stack, jsii.String("MyDemoApi"), &awsapigateway.RestApiProps{
+		RestApiName: jsii.String("MyDemoApi"),
+	})
 
-	// example resource
-	// queue := awssqs.NewQueue(stack, jsii.String("CdkLambdaGo2Queue"), &awssqs.QueueProps{
-	// 	VisibilityTimeout: awscdk.Duration_Seconds(jsii.Number(300)),
-	// })
+	lambda := awslambda.NewFunction(stack, jsii.String("MyDemoLambda"), &awslambda.FunctionProps{
+		Code:    awslambda.Code_FromAsset(jsii.String("lambda"), nil),
+		Handler: jsii.String("bootstrap"),
+		Runtime: awslambda.Runtime_PROVIDED_AL2023(),
+	})
+
+	api.Root().AddMethod(jsii.String("GET"), awsapigateway.NewLambdaIntegration(lambda, nil), nil)
 
 	return stack
 }
